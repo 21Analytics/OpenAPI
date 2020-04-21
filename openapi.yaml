@@ -1,0 +1,167 @@
+openapi: 3.0.2
+info:
+  title: Standard Chartered
+  description: API to facilitate compliance to FATF R16 Travel Rule
+  version: 1.0.0
+servers:
+- url: https://virtserver.swaggerhub.com/lclc/standard-chartered/1.0.0
+  description: SwaggerHub API Auto Mocking
+paths:
+  /v1:
+    summary: Used as a root for all other requests. Can be used to discover resources.
+    get:
+      summary: Use to discover resources
+      responses:
+        "200":
+          description: List resources
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+              examples:
+                Resources:
+                  value:
+                  - GET /v1/coins
+                  - GET /v1/coins/{coinId}/addresses/{addressId}
+                  - PUT /v1/coins/{coinId}/transactions/{transactionId}
+  /v1/coins:
+    get:
+      summary: List of supported coins
+      responses:
+        "200":
+          description: List of supported coins
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+              examples:
+                supportedNetworks:
+                  value:
+                  - BTC
+                  - ETH
+                  - GRIN
+  /v1/coins/{coinId}/transactions/{transactionId}:
+    post:
+      summary: Create a transaction with the relevant personal information of the
+        sender.
+      parameters:
+      - name: Request-Id
+        in: header
+        description: An optional UUID to correlate request and response.
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      - name: coinId
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      - name: transactionId
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      requestBody:
+        description: "The reference to the transaction performed onchain along with\
+          \ the information \nfrom who it originated."
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/owner'
+        required: true
+      responses:
+        "201":
+          description: The transaction was committed to the data store.
+        "400":
+          description: The transaction was malformated.
+        "401":
+          description: The request was not correctly signed or signed by an unknown
+            public key.
+        "409":
+          description: The transaction already exists.
+  /v1/coins/{coinId}/addresses/{address}:
+    summary: Path used to manage a single address.
+    description: 'The REST endpoint/path used to `GET` single instances of an `address`.'
+    get:
+      summary: Get the owner of an address
+      description: Gets the owner details of a single `address`.
+      operationId: getaddress
+      parameters:
+      - name: Request-Id
+        in: header
+        description: An optional UUID to correlate request and response.
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      - name: coinId
+        in: path
+        description: A unique identifier for a `coin`.
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      - name: address
+        in: path
+        description: An address for this particular blockchain.
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: Successful response - returns the owner of the `address`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/owner'
+components:
+  schemas:
+    owner:
+      title: Root Type for owner
+      required:
+      - name
+      - address
+      - countryCode
+      - dateOfBirth
+      - placeOfBirth
+      type: object
+      properties:
+        name:
+          type: string
+        address:
+          type: string
+        countryCode:
+          type: string
+          description: Two letter country code as per ISO 3166-1
+        dateOfBirth:
+          type: string
+          description: As an ISO8601
+        placeOfBirth:
+          type: string
+        accountNumber:
+          type: string
+        LEI:
+          type: string
+          description: A Legal Entity Identifier
+      description: The owner of a address
+      example:
+        name: David Ricardo
+        address: 36 Broad Street Buildings, London
+        countryCode: GB
+        dateOfBirth: '1772-04-19'
+        placeOfBirth: London, Great Britain
+        LEI: 549300SGDHJDHGZYMB20
